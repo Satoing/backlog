@@ -1,66 +1,45 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <decompress.h>
 
-//首先预处理生成候选处理列表
-//随后处理候选列表，遍历读取两个最小值比较，当数组中只剩一个节点时结束运行
-#define MAX_LIST_LEN 256
-#define HASH_TABLE_SIZE 1571
+TreeNode *hash_list_2[MAX_LIST_LEN]; // 用于字典索引的字母列表
+int hash_table_2[HASH_TABLE_SIZE_2]; // Hash表
 
-typedef struct huffman_tree_node {
-    char code[MAX_LIST_LEN]; //用于记录编码，以字符串形式
-    unsigned char letter;    //编码的该字母
+// 用于初始化所有全局变量
+void init_2() {
+    for (int i = 0; i < MAX_LIST_LEN; i++)
+        hash_list_2[i] = NULL;
+    for (int i = 0; i < HASH_TABLE_SIZE_2; i++)
+        hash_table_2[i] = -1;
+}
 
-    int code_length; //用于记录编码长度
-} TreeNode;
-
-
-// 用于字典索引的字母列表
-TreeNode *hash_list[MAX_LIST_LEN];
-// Hash表
-int hash_table[HASH_TABLE_SIZE];
-
-// TODO 字典，该字典用于根据输入文本初始化以及后续变长编码记录
-// TODO 哈希表构建：hash, init, insert, search, alter*, add_letter_dict
-// ! 哈希表存储的是字典索引数组中的下表
-
-unsigned int hash(char *key) {
+unsigned int hash_2(char *key) {
     unsigned int seed = 787;
     unsigned int hash = 0;
     while (*key)
         hash = hash * seed + (*key++);
-    return hash % HASH_TABLE_SIZE;
+    return hash % HASH_TABLE_SIZE_2;
 }
 
-// 用于初始化所有全局变量
-void init() {
-    for (int i = 0; i < MAX_LIST_LEN; i++)
-        hash_list[i] = NULL;
-    for (int i = 0; i < HASH_TABLE_SIZE; i++)
-        hash_table[i] = -1;
+void insert_hash_table_2(char *key, int position) {
+    int addr = hash_2(key);
+    while (hash_table_2[addr] != -1)
+        addr = (addr + 1) % HASH_TABLE_SIZE_2;
+    hash_table_2[addr] = position;
 }
 
-void insert_hash_table(char *key, int position) {
-    int addr = hash(key);
-    while (hash_table[addr] != -1)
-        addr = (addr + 1) % HASH_TABLE_SIZE;
-    hash_table[addr] = position;
-}
-
-int search_hash_table(char *key) {
-    int addr = hash(key);
+int search_hash_table_2(char *key) {
+    int addr = hash_2(key);
     while (1) {
-        if (hash_table[addr] == -1)
+        if (hash_table_2[addr] == -1)
             return -1;
-        if (!strcmp(key, hash_list[hash_table[addr]]->code))
-            return hash_table[addr];
-        addr = (addr + 1) % HASH_TABLE_SIZE;
+        if (!strcmp(key, hash_list_2[hash_table_2[addr]]->code))
+            return hash_table_2[addr];
+        addr = (addr + 1) % HASH_TABLE_SIZE_2;
     }
     return -1;
 }
 
 // 同时填充list和hash_list，初次填充
-void add_letter_dict(int position, const char *code, int code_length, unsigned char letter) {
+void add_letter_dict_2(int position, const char *code, int code_length, unsigned char letter) {
     TreeNode *new_node = (TreeNode *)malloc(sizeof(TreeNode));
     new_node->letter = letter;
     for (int i = 0; i < MAX_LIST_LEN; i++)
@@ -69,16 +48,7 @@ void add_letter_dict(int position, const char *code, int code_length, unsigned c
     new_node->code_length = code_length;
 
     // 填充hash_list
-    hash_list[position] = new_node;
-}
-
-// 获得list中存有节点的数量
-int len_list(TreeNode *list[MAX_LIST_LEN]) {
-    int len = 0;
-    for (int i = 0; i < MAX_LIST_LEN; i++)
-        if (list[i] != NULL)
-            len++;
-    return len;
+    hash_list_2[position] = new_node;
 }
 
 void decompress(const char *filename, const char *writefilename) {
@@ -100,11 +70,9 @@ void decompress(const char *filename, const char *writefilename) {
         char temp[MAX_LIST_LEN / 7] = {0};
 
         fread(&letter, sizeof(char), 1, fin);
-        // TODO 改为short
         short code_len = -1;
         fread(&code_len, sizeof(short), 1, fin);
         code_length = (int)code_len;
-        // TODO 改为按位存储的char
         // 计算占用的char数
         int target_char_num = code_length / 8;
         if (code_length % 8 > 0)
@@ -118,10 +86,10 @@ void decompress(const char *filename, const char *writefilename) {
         }
 
         // 写入字典
-        int dict_addr = search_hash_table(code);
+        int dict_addr = search_hash_table_2(code);
         if (dict_addr == -1) { //哈希表中尚不存在该字符
-            insert_hash_table(code, letter_num);
-            add_letter_dict(letter_num, code, code_length, letter);
+            insert_hash_table_2(code, letter_num);
+            add_letter_dict_2(letter_num, code, code_length, letter);
             letter_num++;
         }
         else return; //哈希表中存在该字符，出错
@@ -147,10 +115,10 @@ void decompress(const char *filename, const char *writefilename) {
             strcat(curr_bits, "1");
         else strcat(curr_bits, "0");
 
-        int addr = search_hash_table(curr_bits);
+        int addr = search_hash_table_2(curr_bits);
         if (addr != -1) {
             // 匹配到
-            dest_char[curr_destchar_index] = hash_list[addr]->letter;
+            dest_char[curr_destchar_index] = hash_list_2[addr]->letter;
             curr_destchar_index += 1;
             for (int k = 0; k < MAX_LIST_LEN; k++) {
                 if (curr_bits[k] == 0)
@@ -177,9 +145,9 @@ void decompress(const char *filename, const char *writefilename) {
 
 void free_hash_list() {
     for (int i = 0; i < MAX_LIST_LEN; i++)
-        if (hash_list[i] != NULL) {
-            free(hash_list[i]);
-            hash_list[i] = NULL;
+        if (hash_list_2[i] != NULL) {
+            free(hash_list_2[i]);
+            hash_list_2[i] = NULL;
         }
         else break;
 }
@@ -187,11 +155,17 @@ void free_hash_list() {
 
 // 传入要解压的文件和解压后文件的名字
 void decompress_tar(const char *file, const char *rename) {
-    init();
-    decompress(file, rename);
+    init_2();
+
+    char filename[200] = {0};
+    string back_path(BACKUP_PATH);
+    back_path += file;
+    strcpy(filename, back_path.c_str());
+
+    decompress(filename, rename);
     free_hash_list();
 }
 
-int main() {
-    decompress_tar("temp.tar.compress", "temp.tar");
-}
+// int main() {
+//     decompress_tar("temp.tar.compress", "temp.tar");
+// }

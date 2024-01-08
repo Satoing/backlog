@@ -1,25 +1,18 @@
-#include <string>
-#include <vector>
+#ifndef BACKUP_H
+#define BACKUP_H
 
-class Backup {
-private:
-    std::string src_path;
-    std::string back_path;
-    std::vector<std::string> abs_paths;
-public:
-    Backup(std::string from, std::string to, const std::vector<std::string> &relative_paths);
-    ~Backup();
-    std::string getBackupPath();
-    int doBackup();
-};
+#include <common.h>
+#include <compress.h>
+#include <decompress.h>
+#include <pack.h>
 
-class Restore {
-private:
-    std::string back_file;
-    std::string restore_path;
-public:
-    Restore(std::string file, std::string to);
-    ~Restore();
-    std::string getRestoreupPath();
-    void doRestore();
-};
+// 传入要打包的path和打包后文件的名字（不含后缀）
+int backup_all_files(const char *path, const char *name);
+
+// 传入文件列表，打包后文件的名字和要打包的path
+int backup_file_list(vector<string> &files, const char *name, const char *path);
+
+// 传入要解包的文件名（都存放在固定路径）和解包路径
+int restore(const char *file, const char *path);
+
+#endif

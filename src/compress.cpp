@@ -1,5 +1,19 @@
 #include <compress.h>
 
+TreeNode *list[MAX_LIST_LEN]; // 候选项列表
+TreeNode *hash_list[MAX_LIST_LEN]; // 用于字典索引的字母列表
+int hash_table[HASH_TABLE_SIZE]; // Hash表
+
+// 用于初始化所有全局变量
+void init() {
+    for (int i = 0; i < MAX_LIST_LEN; i++) {
+        list[i] = NULL;
+        hash_list[i] = NULL;
+    }
+    for (int i = 0; i < HASH_TABLE_SIZE; i++)
+        hash_table[i] = -1;
+}
+
 // hash函数
 unsigned int hash(unsigned char key) {
     return ((unsigned int)key) % HASH_TABLE_SIZE;
@@ -109,7 +123,7 @@ void smallest_two_value(TreeNode *list[MAX_LIST_LEN], int *first, int *second) {
 // 哈夫曼编码实现文件压缩
 // ===================================
 // 基于哈希表（词频表）构建哈夫曼树
-TreeNode *build_huffman_tree() {
+TreeNode * build_huffman_tree() {
     if (len_list(list) == 0) return NULL;
     while (len_list(list) > 1) // 当待处理列表中还有节点存在，即未出现根节点
     {
@@ -225,7 +239,9 @@ void compress(const char *filename) {
 
     // 写入文件.compress
     char writefilename[200] = {0};
-    strcpy(writefilename, filename);
+    string back_path(BACKUP_PATH);
+    back_path += filename;
+    strcpy(writefilename, back_path.c_str());
     strcat(writefilename, ".compress");
 
     FILE *fout = fopen(writefilename, "wb");
@@ -281,7 +297,7 @@ void free_tree_mem(TreeNode *root) {
     root = NULL;
 }
 
-// 传入要解压的tar文件即可
+// 传入要压缩的tar文件即可
 void compress_tar(const char *file) {
     init();
     build_list(file);
@@ -291,6 +307,6 @@ void compress_tar(const char *file) {
     free_tree_mem(root_node);
 }
 
-int main() {
-    compress_tar("temp.tar");
-}
+// int main() {
+//     compress_tar("temp.tar");
+// }
