@@ -45,6 +45,13 @@
         "streambuf": "cpp",
         "typeinfo": "cpp",
         "map": "cpp",
-        "set": "cpp"
+        "set": "cpp",
+        "regex": "cpp",
+        "bitset": "cpp",
+        "chrono": "cpp",
+        "codecvt": "cpp",
+        "filesystem": "cpp",
+        "ratio": "cpp",
+        "cinttypes": "cpp"
     }
 }
