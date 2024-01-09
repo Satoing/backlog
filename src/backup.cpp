@@ -18,6 +18,29 @@ int backup_file_list(vector<string> &files, const char *name, const char *path) 
     return 0;
 }
 
+int backup_from_log(const char *name, const char *path) {
+    const char *filename = "log_files.txt"; //文件名
+    char file[256]; //每行最大读取的字符数
+    FILE *fp = fopen(filename, "r");
+
+    vector<string> files;
+    while (!feof(fp)) {
+        fgets(file, 256, fp);  //读取一行
+        int i = strlen(file);
+        file[strlen(file) - 1] = '\0';
+            printf("%s\n", file);
+        files.emplace_back(file);
+    }
+    fclose(fp);
+    remove("log_files.txt");
+    files.pop_back();
+    
+    // for(string file : files) printf("%s\n", file.c_str());
+    backup_file_list(files, name, path);
+
+    return 0;
+}
+
 int restore(const char *file, const char *path) {
     string filename(file);
     string tar_name(filename.substr(0, filename.length() - 9));
@@ -45,6 +68,7 @@ int get_dir_files(const char *path, const char *relative) {
 		printf("Can not open %s/n", path);
 		return -1;
 	}
+    int fd = open("log_files.txt", O_CREAT|O_RDWR|O_APPEND);
 	while((entry = readdir(p_dir)) != NULL) {
         if(strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) 
             continue;
@@ -57,7 +81,6 @@ int get_dir_files(const char *path, const char *relative) {
         }
 		strcat(sub_path, entry->d_name);
         
-        int fd = open("log_files.txt", O_CREAT|O_RDWR|O_APPEND);
         write(fd, sub_path, strlen(sub_path));
         write(fd, "\n", 1);
 
@@ -70,6 +93,7 @@ int get_dir_files(const char *path, const char *relative) {
 		}
 		free(sub_path);
 	}
+    close(fd);
 	closedir(p_dir);
 	return -1;
 }

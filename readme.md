@@ -13,5 +13,5 @@ test.tar.compress
 ```
 ./main -r <要解包的文件名> <解包后文件存放的路径>
 
-./main -r sb.tar.compress /root/newfolder
+./main -r test.tar.compress /root/newfolder
 ```
