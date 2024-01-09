@@ -307,6 +307,6 @@ void compress_tar(const char *file) {
     free_tree_mem(root_node);
 }
 
-// int main() {
-//     compress_tar("temp.tar");
+// int main(int argc, char *argv[]) {
+//     compress_tar(argv[1]);
 // }

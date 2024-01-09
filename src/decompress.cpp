@@ -166,6 +166,6 @@ void decompress_tar(const char *file, const char *rename) {
     free_hash_list();
 }
 
-// int main() {
-//     decompress_tar("temp.tar.compress", "temp.tar");
+// int main(int argc, char *argv[]) {
+//     decompress_tar(argv[1], argv[2]);
 // }
